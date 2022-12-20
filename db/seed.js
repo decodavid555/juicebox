@@ -11,7 +11,8 @@ const {
   getPostsByUser,
   createTags,
   createPostTag,
-  addTagsToPost
+  addTagsToPost,
+  getUserByUsername
 } = require('./index');
 
 
@@ -100,6 +101,7 @@ async function dropTables() {
       throw error;
     }
   }
+  
   async function createInitialPosts() {
     try {
       const [albert, sandra, glamgal] = await getAllUsers();

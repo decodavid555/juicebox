@@ -11,7 +11,7 @@ tagsRouter.use((req, res, next) => {
 tagsRouter.get('/', async (req, res) => {
     const tags = await client.query(`SELECT * FROM tags`);
   res.send({
-    tags: []
+    tags
   });
 });
 
