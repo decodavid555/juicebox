@@ -1,7 +1,9 @@
 const express = require('express');
 const usersRouter = express.Router();
-const { getAllUsers, getUserByUsername, createUser } = require('../db');
+const { getAllUsers, getUserByUsername, createUser, getUserById } = require('../db');
 const jwt = require("jsonwebtoken")
+const { requireUser } = require('./utils')
+
 
 
 usersRouter.use((req, res, next) => {
@@ -21,7 +23,6 @@ usersRouter.post('/login', async (req, res, next) => {
   console.log("WHY GOD WHY------------>", req.body)
   const { username, password } = req.body;
 
-  // request must have both
   if (!username || !password) {
     next({
       name: "MissingCredentialsError",
@@ -33,13 +34,8 @@ usersRouter.post('/login', async (req, res, next) => {
     const user = await getUserByUsername(username);
 
     if (user && user.password == password) {
-      // create token & return to user
-      const token = jwt.sign({
-        id: user.id,
-        username
-      }, process.env.JWT_SECRET
+      const token = jwt.sign({ id: user.id, username}, process.env.JWT_SECRET
       );
-
       res.send({ message: "you're logged in!", token });
     } else {
       next({ 
@@ -88,5 +84,58 @@ usersRouter.post('/register', async (req, res, next) => {
     next({ name, message })
   } 
 });
+
+usersRouter.patch('/:userId', requireUser, async (req, res, next) => {
+  const userId = req.params.userId
+
+  try {
+    const userQuery = await getUserById(userId)
+    if (userQuery) {
+      if (userQuery.id === req.user.id) {
+        const activeUser = await updateUser(userId, {active: true})
+        res.send({user: activeUser})
+      } else {
+        next({
+          name: 'UnauthorizedUserError',
+          message: "Ummmmmm did you think this was your account to deactivate "
+        })
+      }
+    } else {
+      next({
+        name: 'UserNotFoundError',
+        message: "Can't find that user.... You sure they exist???"
+      })
+    }
+  } catch ({ name, message }) {
+    next({ name, message })
+  }
+})
+
+usersRouter.delete('/:userId', requireUser, async (req, res, next) => {
+  const userId = req.params.userId
+
+  try {
+    const userQuery = await getUserById(userId)
+    if (userQuery) {
+      if (userQuery.id === req.user.id) {
+        const deletedUser = await updateUser(userId, {active: false})
+        res.send({user: deletedUser})
+      } else {
+        next({
+          name: 'UnauthorizedUserError',
+          message: "Ummmmmm did you think this was your account to deactivate "
+        })
+      }
+    } else {
+      next({
+        name: 'UserNotFoundError',
+        message: "Can't find that user.... You sure they exist???"
+      })
+    }
+  } catch ({ name, message }) {
+    next({ name, message })
+  }
+})
+
 
 module.exports = usersRouter;
