@@ -6,7 +6,8 @@
   "scripts": {
     "seed:dev": "node ./db/seed.js ",
     "start": "node index.js",
-    "start:dev": "node index.js"
+    "start:dev": "node index.js",
+    "build": "webpack"
   },
   "keywords": [],
   "author": "",
